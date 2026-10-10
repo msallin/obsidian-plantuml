@@ -73,4 +73,10 @@ describe("issue #49: links in wide diagrams", () => {
         expect(css).toMatch(/\.puml-svg \{[^}]*max-width: 100%;/);
         expect(css).toMatch(/\.puml-svg \{[^}]*height: auto;/);
     });
+
+    it("does not fail on a response that is xml but not svg", () => {
+        const el = document.createElement("div");
+
+        expect(() => insertSvgImage(el, "<Error><Message>Not Found</Message></Error>")).not.toThrow();
+    });
 });

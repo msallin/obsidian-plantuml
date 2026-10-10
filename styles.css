@@ -9,7 +9,7 @@
     background-color: unset;
 }
 
-.plantuml-source-view .cm-cursor {
+.view-content .plantuml-source-view .cm-cursor {
     border-left: 1.2px solid var(--text-muted);
 }
 
