@@ -107,8 +107,13 @@ export default class PlantumlPlugin extends Plugin {
                 callback: () => void this.cache.clear(true),
             });
 
-            await this.cache.migrateFromV1();
-            await this.cache.evictExpired(this.settings.cache);
+            try {
+                await this.cache.migrateFromV1();
+                await this.cache.evictExpired(this.settings.cache);
+            } catch (error) {
+                // the rest of the plugin works without the cache
+                console.warn('PlantUML: diagram cache unavailable', error);
+            }
 
             //internal links
             this.observer = new MutationObserver((mutations) => {

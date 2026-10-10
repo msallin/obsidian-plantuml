@@ -30,16 +30,26 @@ export class DiagramCache {
 
     private store = new IdbStore('puml');
 
+    // the cache only saves rendering time, if IndexedDB is unavailable diagrams still have to render
     async get(encoded: string): Promise<DiagramCacheEntry | null> {
-        return this.store.getItem(DIAGRAM_PREFIX + encoded);
+        try {
+            return await this.store.getItem<DiagramCacheEntry>(DIAGRAM_PREFIX + encoded);
+        } catch (error) {
+            console.warn('PlantUML: diagram cache unavailable', error);
+            return null;
+        }
     }
 
     async set(encoded: string, entry: DiagramCacheEntry): Promise<void> {
-        await this.store.setItem(DIAGRAM_PREFIX + encoded, entry);
-        for (const filename of (entry.includes ?? [])) {
-            const indexKey = INCLUDES_PREFIX + filename;
-            const existing: string[] | null = await this.store.getItem(indexKey);
-            await this.store.setItem(indexKey, [...new Set([...(existing ?? []), encoded])]);
+        try {
+            await this.store.setItem(DIAGRAM_PREFIX + encoded, entry);
+            for (const filename of (entry.includes ?? [])) {
+                const indexKey = INCLUDES_PREFIX + filename;
+                const existing: string[] | null = await this.store.getItem(indexKey);
+                await this.store.setItem(indexKey, [...new Set([...(existing ?? []), encoded])]);
+            }
+        } catch (error) {
+            console.warn('PlantUML: diagram cache unavailable', error);
         }
     }
 
