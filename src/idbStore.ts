@@ -4,7 +4,7 @@
 const STORE_NAME = "keyvaluepairs";
 
 function asError(error: unknown): Error {
-    return error instanceof Error ? error : new Error(`IndexedDB request failed: ${String(error)}`);
+    return error instanceof Error ? error : new Error("IndexedDB request failed");
 }
 
 /**
@@ -43,7 +43,8 @@ export class IdbStore {
             const cursor = cursorRequest.result;
             if (!cursor) return;
             try {
-                callback(cursor.value as T, String(cursor.key));
+                // localforage and this store only ever write string keys
+                callback(cursor.value as T, cursor.key as string);
                 cursor.continue();
             } catch (error) {
                 callbackError = error;
@@ -70,7 +71,7 @@ export class IdbStore {
     }
 
     private open(): Promise<IDBDatabase> {
-        if (!this.connection) {
+        if (this.connection === null) {
             this.connection = this.openDatabase().then(db => {
                 if (db.objectStoreNames.contains(STORE_NAME)) return db;
                 // the database exists without the store, it can only be added in a version upgrade
