@@ -1,7 +1,7 @@
 import { debounce, Debouncer, HoverParent, Keymap, Menu, Notice, TFile } from "obsidian";
 import PlantumlPlugin from "../main";
 import { Processor, ProcessorContext } from "./processor";
-import { getInternalLinkText, insertErrorMessage, serializeSvg } from "../functions";
+import { extractCaption, getInternalLinkText, insertCaption, insertErrorMessage, serializeSvg } from "../functions";
 import { registerSvgLightbox } from "../svgLightbox";
 
 export class DebouncedProcessors implements Processor {
@@ -13,6 +13,7 @@ export class DebouncedProcessors implements Processor {
     renderStates = new WeakMap<HTMLElement, {
         originalSource: string,
         source: string,
+        caption: string | null,
         ctx: ProcessorContext,
         filetype: string,
         processor: (source: string, el: HTMLElement, ctx: ProcessorContext) => Promise<void>,
@@ -52,6 +53,10 @@ export class DebouncedProcessors implements Processor {
         el.createEl("h6", {text: "Generating PlantUML diagram", cls: "puml-loading"});
 
         let source = this.plugin.replacer.decodeWhiteSpaces(originalSource);
+        const extracted = this.plugin.settings.captionBelowDiagram ? extractCaption(source) : {source, caption: null};
+        source = extracted.source;
+        // a caption given by the embedding note wins over the one in the diagram
+        const caption = ctx?.caption || extracted.caption;
         source = this.plugin.replacer.replaceLinks(source, ctx?.sourcePath ?? '', filetype);
         const themeHeader = activeDocument.body.hasClass('theme-dark')
             ? this.plugin.settings.darkHeader
@@ -59,7 +64,7 @@ export class DebouncedProcessors implements Processor {
         source = this.plugin.replacer.insertHeaders(source, this.plugin.settings.header, themeHeader);
 
         const isRerender = this.renderStates.has(el);
-        const state = {originalSource, source, ctx, filetype, processor};
+        const state = {originalSource, source, caption, ctx, filetype, processor};
         this.renderStates.set(el, state);
 
         const render = async (source: string, el: HTMLElement, ctx: ProcessorContext) => {
@@ -71,6 +76,7 @@ export class DebouncedProcessors implements Processor {
                 console.error("PlantUML: failed to render diagram", error);
                 insertErrorMessage(el, error);
             }
+            insertCaption(el, this.renderStates.get(el)?.caption);
         };
 
         if (isRerender) {

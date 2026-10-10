@@ -36,6 +36,23 @@ For the content of such a link refer to the [obisidian documentation](https://he
 
 Normal web links are described [here](https://plantuml.com/de/link)
 
+### Captions
+
+Embedded `.puml` files show their display text as caption below the diagram, like image captions:
+`![[diagram.puml|Figure 1: Login flow]]`
+
+For code blocks, turn on `Captions below diagrams` in the settings. The PlantUML [`caption`](https://plantuml.com/commons) of the diagram is then shown
+below it instead of inside the image, `\n` starts a new line:
+
+~~~markdown
+```plantuml
+caption Figure 1: Login flow
+Bob -> Alice : hello
+```
+~~~
+
+The caption is styled with the `.puml-caption` class. Exported and copied diagrams don't contain it.
+
 ### Including an `.puml` file
 > ⚠️ Only works when using local rendering
 

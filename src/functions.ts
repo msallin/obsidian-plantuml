@@ -209,6 +209,43 @@ export function serializeSvg(svg: SVGElement): string {
     return new XMLSerializer().serializeToString(svg);
 }
 
+// `caption text` or `caption: text`, but not style selectors like `caption {` inside a `<style>` block
+const CAPTION_LINE = /^[ \t]*caption(?:[ \t]*:[ \t]*|[ \t]+)([^{\s].*?)[ \t]*$/gim;
+
+/**
+ * take the `caption` out of the diagram source, so it can be shown below the diagram instead of inside the image.
+ * all caption lines are removed, PlantUML shows the last one.
+ * @return the source without caption lines and the caption, `\n` in it is turned into a line break
+ */
+export function extractCaption(source: string): {source: string, caption: string | null} {
+    let caption: string | null = null;
+    const stripped = source.replace(CAPTION_LINE, (_: string, text: string) => {
+        caption = text.replace(/\\n/g, "\n");
+        return "";
+    });
+    return {source: stripped, caption};
+}
+
+/**
+ * show the caption below the diagram, like image captions.
+ * the processors empty the element on every render, so this runs after each render.
+ */
+export function insertCaption(el: HTMLElement, caption: string | null | undefined) {
+    el.querySelector(":scope > .puml-caption")?.remove();
+    if (!caption) {
+        if (el.hasClass("puml-figure")) {
+            el.removeClass("puml-figure");
+            el.removeAttribute("role");
+            el.removeAttribute("aria-label");
+        }
+        return;
+    }
+    el.addClass("puml-figure");
+    el.setAttr("role", "figure");
+    el.setAttr("aria-label", caption);
+    el.createDiv({cls: "puml-caption", text: caption});
+}
+
 export function insertErrorMessage(el: HTMLElement, error: unknown) {
     el.empty();
 

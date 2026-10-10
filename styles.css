@@ -79,3 +79,16 @@
 .lightbox.plantuml-svg-lightbox .plantuml-svg-lightbox-inline a {
     cursor: pointer;
 }
+
+.puml-figure {
+    width: fit-content;
+    max-width: 100%;
+}
+
+.puml-caption {
+    margin-top: var(--size-4-1);
+    color: var(--text-muted);
+    font-size: var(--font-smaller);
+    text-align: center;
+    white-space: pre-line;
+}
